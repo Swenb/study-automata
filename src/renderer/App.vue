@@ -27,8 +27,8 @@
 
           <el-submenu index="4">
             <template slot="title"><i class="el-icon-sort"></i>自动机-语法转换</template>
-              <el-menu-item index="3-1">NFA/DFA <=> Regex</el-menu-item>
-              <el-menu-item index="3-2">PDA <=> CFG</el-menu-item>
+              <el-menu-item index="4-1">NFA/DFA <=> Regex</el-menu-item>
+              <el-menu-item index="4-2">PDA <=> CFG</el-menu-item>
           </el-submenu>
 
         </el-menu>
