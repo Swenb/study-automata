@@ -200,8 +200,18 @@ export default {
       return true;
     },
     before() {
-      this.active -= 1;
-      if (this.active < 0) this.active = 0;
+      if (this.active === 2) {
+        this.$confirm('返回后所有转移函数都将被清空, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }).then(() => {
+          this.active -= 1;
+        });
+      } else {
+        this.active -= 1;
+        if (this.active < 0) this.active = 0;
+      }
     },
     create() {
       if (this.hasEmptyValue(this.DFA.D)) {
