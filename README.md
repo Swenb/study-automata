@@ -2,7 +2,7 @@
 
 A visualized software for studying automata theory.
 
-The software is bound for teachers and students to use as a reference for the aquisition of [automata theory](https://en.wikipedia.org/wiki/Automata_theory).
+The software is bound for teachers and students to use as a reference for the acquisition of [automata theory](https://en.wikipedia.org/wiki/Automata_theory).
 
 ![Image text](./main.jpg)
 

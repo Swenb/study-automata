@@ -57,15 +57,7 @@ export default {
 
 <style>
 /* CSS */
-@font-face
-{
-font-family: SourceSansPro-Regular;
-src: url('./assets/fonts/SourceSansPro-Regular.otf');
-}
-@font-face {
-font-family: SourceSansPro-Light;
-src: url('./assets/fonts/SourceSansPro-Light.otf');
-}
+
 body {
   margin: 0;
   border-style: none;
