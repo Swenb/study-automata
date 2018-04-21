@@ -1,37 +1,83 @@
 <template>
   <div>
 
-    <el-steps :active="active" finish-status="success" simple>
+    <el-steps :active="active" finish-status="success" style="margin-bottom:30px" simple>
       <el-step title="状态集Q"></el-step>
       <el-step title="字母表∑"></el-step>
       <el-step title="转移函数δ"></el-step>
     </el-steps>
 
     <el-form :model="DFA" ref="DFA" label-width="80px">
+
       <el-col :span="24" v-show="active === 0">
         <el-form-item
           v-for="(q, index) in DFA.Q"
           :label="index === 0 ? '初始状态': '状态' + index"
-          :key="q.key"
-          :prop="'Q.' + index + '.value'"
+          :key="'q.' + q.value"
+          :prop="q.value"
         >
           <el-col :span="10">
             <el-input v-model="q.value" placeholder="状态名称"></el-input>
           </el-col>
-          <el-button @click.prevent="q.final = !q.final" style="margin-right:5px" v-bind:type="q.final?'success':'primary'" plain>{{q.final ? '取消' : '设为'}}终结状态</el-button>
-          <el-button @click.prevent="removeq(q)" style="margin-right:5px" v-if="index" type="danger" plain>删除</el-button>
+          <el-button @click.prevent="q.final = !q.final" style="margin-left:5px" v-bind:type="q.final?'success':'primary'" plain>{{q.final ? '取消' : '设为'}}终结状态</el-button>
+          <el-button @click.prevent="remove(DFA.Q, q)" style="margin-left:3px" v-if="index" type="danger" plain>删除</el-button>
         </el-form-item>
         <el-form-item>
           <el-button @click="addq">新增状态</el-button>
         </el-form-item>
+
+
+        <el-alert v-if="err_msg" :title=err_msg type="error"></el-alert>
+        <el-button style="margin-top: 12px;" @click="before">上一步</el-button>
+        <el-button style="margin-top: 12px;" @click="next(DFA.Q)">下一步</el-button>
+        <el-button @click="reset('DFA')">全部重置</el-button>
+      </el-col>
+
+      <el-col :span="24" v-show="active === 1">
+        <el-form-item
+          v-for="(s, index) in DFA.S"
+          :label="'字母' + index"
+          :key="'s.' + s.value"
+          :prop="s.value"
+        >
+          <el-col :span="10">
+            <el-input v-model="s.value" placeholder="字母"></el-input>
+          </el-col>
+          <el-button @click.prevent="remove(DFA.S, s)" style="margin-left:3px" type="danger" plain>删除</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="adds">新增字母</el-button>
+        </el-form-item>
+
+        <el-alert v-if="err_msg" :title=err_msg type="error"></el-alert>
+        <el-button style="margin-top: 12px;" @click="before">上一步</el-button>
+        <el-button style="margin-top: 12px;" @click="next(DFA.S)">下一步</el-button>
+        <el-button @click="reset('DFA')">全部重置</el-button>
+      </el-col>
+
+      <el-col :span="24" v-show="active === 2">
+
+        <el-form-item
+          v-for="(d, index) in DFA.D"
+          :label="`(${d.value})`"
+          :key="'d.' + d.value"
+          :prop="d.result"
+        >
+          <el-col :span="10">
+            <el-select v-model="d.result" placeholder="转移状态">
+              <el-option v-for="(q, index) in DFA.Q" :key="'d.q.' + q.value" :label="q.value" :value="q.value"></el-option>
+            </el-select>
+          </el-col>
+        </el-form-item>
+
+        <el-alert v-if="err_msg" :title=err_msg type="error"></el-alert>
+        <el-button style="margin-top: 12px;" @click="before">上一步</el-button>
+        <el-button style="margin-top: 12px;" @click="create">创建DFA</el-button>
+        <el-button @click="reset('DFA')">全部重置</el-button>
       </el-col>
     </el-form>
 
-    <el-alert v-if="err_msg" :title=err_msg type="error"></el-alert>
-    <el-button style="margin-top: 12px;" @click="before">上一步</el-button>
-    <el-button v-if="active < 2" style="margin-top: 12px;" @click="next()">下一步</el-button>
-    <el-button v-if="active === 2" style="margin-top: 12px;" @click="create()">创建DFA</el-button>
-    <el-button @click="resetForm('DFA')">全部重置</el-button>
+
 
     <p>状态集Q: </p>
     <p v-for="Q in DFA.Q">{{ Q.value }} 是否接受：{{ Q.final }}</p>
@@ -91,7 +137,7 @@ export default {
     hasValue(arr, val) {
       for (let i = 0; i < arr.length; i += 1) {
         if (arr[i].value === val) {
-          return true;
+          return i;
         }
       }
       return false;
@@ -121,7 +167,7 @@ export default {
       return false;
     },
     transd(q, a) {
-      if (this.hasValue(this.DFA.Q, q.value) && this.hasValue(this.DFA.S, a)) {
+      if (this.hasValue(this.DFA.Q, q.value) !== false && this.hasValue(this.DFA.S, a) !== false) {
         console.log(this.getObjFromValue(this.DFA.D, `${q.value} ${a}`));
         return this.getObjFromValue(this.DFA.D, `${q.value} ${a}`).result;
       }
@@ -138,17 +184,15 @@ export default {
       this.final = this.xtransd(this.DFA.q0, this.inputText);
       return this.final.final;
     },
-    next() {
-      // console.log(this.$refs[formName]);
-      if (this.active === 0) {
-        if (this.hasEmptyValue(this.DFA.Q)) {
-          this.err_msg = '状态不能为空';
-          return false;
-        }
-        if (this.hasMulValue(this.DFA.Q)) {
-          this.err_msg = '状态不能重复';
-          return false;
-        }
+    next(arr) {
+      console.log(this.active);
+      if (this.hasEmptyValue(arr)) {
+        this.err_msg = '不能有空值';
+        return false;
+      }
+      if (this.hasMulValue(arr)) {
+        this.err_msg = '不能有重复值';
+        return false;
       }
       this.err_msg = '';
       this.active += 1;
@@ -160,17 +204,23 @@ export default {
       if (this.active < 0) this.active = 0;
     },
     create() {
+      if (this.hasEmptyValue(this.DFA.D)) {
+        this.err_msg = '不能有空值';
+      }
     },
-    removeq(item) {
-      const index = this.DFA.Q.indexOf(item);
+    remove(arr, item) {
+      const index = arr.indexOf(item);
       if (index !== -1) {
-        this.DFA.Q.splice(index, 1);
+        arr.splice(index, 1);
       }
     },
     addq() {
       this.DFA.Q.push({ value: '', final: false });
     },
-    resetForm() {
+    adds() {
+      this.DFA.S.push({ value: '' });
+    },
+    reset() {
       this.DFA = {
         Q: [
           { value: 'q0', final: false },
@@ -179,6 +229,19 @@ export default {
         D: [],
         q0: { value: 'q0' },
       };
+      this.active = 0;
+    },
+  },
+  watch: {
+    active(val) {
+      if (val === 2) {
+        this.DFA.D = [];
+        for (let i = 0; i < this.DFA.Q.length; i += 1) {
+          for (let j = 0; j < this.DFA.S.length; j += 1) {
+            this.DFA.D.push({ value: `${this.DFA.Q[i].value} ${this.DFA.S[j].value}`, result: '' });
+          }
+        }
+      }
     },
   },
 };
